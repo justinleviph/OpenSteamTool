@@ -1,0 +1,36 @@
+
+name: Windows EXE Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'SteamToolManager/**'
+      - '.github/workflows/windows-exe.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build Windows EXE
+        run: dotnet publish SteamToolManager/SteamToolManager.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o publish
+
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path publish\* -DestinationPath SteamToolManager-Windows-x64.zip -Force
+
+      - name: Upload EXE Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SteamToolManager-Windows-x64
+          path: SteamToolManager-Windows-x64.zip
